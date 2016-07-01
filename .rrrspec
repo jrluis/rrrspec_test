@@ -42,4 +42,5 @@ RRRSpec.configure(:client) do |conf|
   conf.max_trials = 3
   conf.unknown_spec_timeout_sec = 8 * 60
   conf.least_timeout_sec = 60
+  conf.rrrspec_web_base ="http://#{ENV['MASTER_HOST']}:3000/"
 end
