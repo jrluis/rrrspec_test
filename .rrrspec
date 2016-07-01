@@ -1,0 +1,45 @@
+RRRSpec.configure do |conf|
+  conf.redis = { host: "#{ENV['REDIS_HOST']}", port: 6379 }
+end
+
+RRRSpec.configure(:client) do |conf|
+  Time.zone_default = Time.find_zone('Europe/Lisbon')
+  conf.redis = { host: "#{ENV['REDIS_HOST']}", port: 6379 }
+
+  conf.packaging_dir = `git rev-parse --show-toplevel`.strip
+  conf.rsync_remote_path = "#{ENV['MASTER_HOST']}:/tmp/rrrspec-rsync"
+  conf.rsync_options = %w(
+    --compress
+    --times
+    --recursive
+    --links
+    --perms
+    --inplace
+    --delete
+  ).join(' ')
+
+  conf.spec_files = lambda do
+    Dir.chdir(conf.packaging_dir) do
+      Dir['spec/**{,/*/**}/*_spec.rb'].uniq
+    end
+  end
+
+  conf.setup_command = <<-SETUP
+    bundle install
+    DB_HOST=localhost DB_PASSWORD="" RAILS_ENV=development bundle exec rake db:create
+    DB_HOST=localhost DB_PASSWORD="" RAILS_ENV=development bundle exec rake db:schema:load
+  SETUP
+
+  conf.slave_command = <<-SLAVE
+    DB_HOST=localhost DB_PASSWORD="" RAILS_ENV=test bundle exec rake db:create
+    DB_HOST=localhost DB_PASSWORD="" bundle exec rake db:test:prepare
+    DB_HOST=localhost DB_PASSWORD="" bundle exec rrrspec-client slave
+  SLAVE
+
+  conf.taskset_class = 'rrr_test_app'
+  conf.worker_type = 'default'
+  conf.max_workers = 10
+  conf.max_trials = 3
+  conf.unknown_spec_timeout_sec = 8 * 60
+  conf.least_timeout_sec = 60
+end
