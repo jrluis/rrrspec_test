@@ -113,13 +113,13 @@ GEM
     rdoc (4.2.2)
       json (~> 1.4)
     redis (3.3.0)
-    rrrspec-client (0.4.2)
+    rrrspec-client (0.4.3)
       activesupport
       extreme_timeout
       launchy
       redis
       rspec (>= 3.0)
-      thor
+      thor (>= 0.18.0)
       tzinfo
       uuidtools
     rspec (3.4.0)
